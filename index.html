@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Word Catcher · 听音抓词 v0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#000;overflow:hidden;
+  font-family:'PingFang SC','WenQuanYi Zen Hei','Microsoft YaHei',sans-serif;color:#fff}
+body{display:flex;justify-content:center;align-items:center}
+#app{position:relative;width:min(100vw,calc(100vh*9/16));height:min(100vh,calc(100vw*16/9));
+  background:#0b0618;overflow:hidden}
+
+/* ===== TOP SCENE ===== */
+#scene{position:absolute;left:0;top:0;width:100%;height:56%;overflow:hidden;
+  background:
+   radial-gradient(110% 70% at 50% -8%, #432075 0%, rgba(67,32,117,0) 60%),
+   radial-gradient(70% 50% at 18% 34%, rgba(147,51,234,.42), rgba(147,51,234,0) 70%),
+   radial-gradient(60% 46% at 82% 60%, rgba(217,70,239,.25), rgba(217,70,239,0) 72%),
+   linear-gradient(180deg,#150a2f 0%,#1c0e40 42%,#29134f 100%)}
+.cloud{position:absolute;border-radius:50%;filter:blur(46px);mix-blend-mode:screen;pointer-events:none}
+.c1{left:-14%;top:8%;width:52%;height:38%;background:radial-gradient(closest-side,rgba(124,58,237,.5),rgba(124,58,237,0))}
+.c2{right:-11%;top:28%;width:48%;height:36%;background:radial-gradient(closest-side,rgba(192,38,211,.32),rgba(192,38,211,0))}
+.c3{left:20%;top:55%;width:60%;height:34%;background:radial-gradient(closest-side,rgba(147,51,234,.28),rgba(147,51,234,0))}
+.beam{position:absolute;left:31%;top:-5%;width:38%;height:80%;
+  background:linear-gradient(180deg,rgba(216,180,254,.20),rgba(216,180,254,0) 70%);
+  filter:blur(30px);transform:rotate(8deg)}
+#stars{position:absolute;inset:0;background-image:
+  radial-gradient(2px 2px at 40px 60px,rgba(255,255,255,.85) 45%,transparent 50%),
+  radial-gradient(1.6px 1.6px at 150px 210px,rgba(233,213,255,.8) 45%,transparent 50%),
+  radial-gradient(2.2px 2.2px at 260px 90px,rgba(255,255,255,.7) 45%,transparent 50%),
+  radial-gradient(1.4px 1.4px at 90px 330px,rgba(216,180,254,.75) 45%,transparent 50%),
+  radial-gradient(1.8px 1.8px at 320px 280px,rgba(255,255,255,.6) 45%,transparent 50%);
+  background-size:33% 36%;background-repeat:repeat}
+#fx{position:absolute;inset:0;width:100%;height:100%}
+
+/* speaker chip */
+#speaker{position:absolute;right:2.5%;top:3%;width:52px;height:52px;border-radius:15px;
+  background:rgba(30,16,60,.55);border:1px solid rgba(216,180,254,.35);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:8;
+  box-shadow:0 0 18px rgba(147,51,234,.35);transition:transform .15s}
+#speaker:active{transform:scale(.92)}
+#speaker svg{width:28px;height:28px}
+#speaker .dot{position:absolute;right:6px;top:6px;width:8px;height:8px;border-radius:50%;background:#a3e635;box-shadow:0 0 8px #a3e635}
+#speaker.muted .dot{background:#71717a;box-shadow:none}
+#speaker.muted .wave{opacity:.15}
+
+/* ===== STRIP ===== */
+#strip{position:absolute;left:0;top:56%;width:100%;height:7%;z-index:6;
+  background:linear-gradient(180deg,rgba(24,12,48,.94),rgba(16,8,34,.97));
+  border-top:1px solid rgba(196,141,255,.25);border-bottom:1px solid rgba(196,141,255,.15);
+  display:flex;align-items:center;gap:12px;padding:0 4%}
+#listenChip{display:flex;align-items:center;gap:10px;background:rgba(124,58,237,.22);
+  border:1px solid rgba(196,141,255,.45);border-radius:40px;padding:6px 14px;cursor:pointer}
+#wave{display:flex;align-items:center;gap:4px;height:26px}
+#wave i{display:block;width:4px;border-radius:2px;background:linear-gradient(180deg,#e879f9,#7c3aed);
+  height:8px;transition:height .2s}
+#strip.speaking #wave i{animation:wv .5s ease-in-out infinite alternate}
+#wave i:nth-child(2){animation-delay:.1s}#wave i:nth-child(3){animation-delay:.2s}
+#wave i:nth-child(4){animation-delay:.3s}#wave i:nth-child(5){animation-delay:.15s}
+@keyframes wv{from{height:6px}to{height:24px}}
+#listenTxt{font-size:14px;letter-spacing:1px;opacity:.9}
+#muteHint{font-size:13px;color:#f0abfc;display:none}
+#roundBox{margin-left:auto;text-align:right}
+#round{font-size:15px;color:#f0abfc;font-weight:700}
+#streak{font-size:12px;color:#c4b5fd;opacity:.85;margin-top:2px}
+#slots{display:flex;gap:6px;margin:0 auto}
+.slot{width:44px;height:26px;border-radius:8px;border:1.5px dashed rgba(196,141,255,.4);
+  display:flex;align-items:center;justify-content:center;font-size:13px;color:rgba(196,141,255,.4)}
+.slot.filled{border:1.5px solid rgba(240,171,252,.9);color:#fff;
+  background:linear-gradient(180deg,rgba(147,51,234,.5),rgba(124,58,237,.35));
+  font-family:Georgia,'Times New Roman',serif;font-style:italic;font-weight:700;
+  box-shadow:0 0 16px rgba(232,121,249,.55)}
+
+/* ===== CAMERA ZONE ===== */
+#cam{position:absolute;left:0;top:63%;width:100%;height:37%;overflow:hidden;background:#0a0516}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);
+  filter:brightness(.85) saturate(.9)}
+#camShade{position:absolute;inset:0;background:
+  radial-gradient(70% 55% at 50% 0%,rgba(147,51,234,.20),transparent 70%),
+  linear-gradient(180deg,rgba(10,5,22,.25),rgba(6,3,14,.55));pointer-events:none}
+#scan{position:absolute;inset:0;opacity:.4;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 2px,transparent 2px 5px)}
+#camLabel{position:absolute;left:3%;bottom:5%;font-size:11px;letter-spacing:3px;color:#c4b5fd;opacity:.55;z-index:5}
+#camLive{position:absolute;left:3%;top:6%;font-size:11px;letter-spacing:2px;color:#f0abfc;opacity:.8;z-index:5;
+  display:flex;align-items:center;gap:7px}
+#camLive i{width:8px;height:8px;border-radius:50%;background:#f43f5e;box-shadow:0 0 8px #f43f5e;animation:blink 1.6s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+#hud{position:absolute;inset:0;width:100%;height:100%;z-index:4}
+
+/* ===== OVERLAY ===== */
+#overlay{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:22px;text-align:center;
+  background:rgba(8,4,18,.82);backdrop-filter:blur(6px);padding:0 12%}
+#overlay h1{font-size:26px;letter-spacing:2px;font-weight:700}
+#overlay h1 b{color:#f0abfc;font-family:Georgia,serif;font-style:italic}
+#overlay p{font-size:14px;color:#c4b5fd;line-height:1.8}
+#overlay .steps{font-size:13px;color:#9d7ac9;line-height:2}
+#startBtn{margin-top:6px;padding:14px 52px;border-radius:44px;border:none;cursor:pointer;
+  font-size:18px;font-weight:700;color:#fff;letter-spacing:2px;
+  background:linear-gradient(90deg,#7c3aed,#e879f9);box-shadow:0 0 30px rgba(232,121,249,.5)}
+#startBtn:active{transform:scale(.96)}
+#overlay.hidden{display:none}
+#toast{position:absolute;left:50%;top:60%;transform:translateX(-50%);z-index:15;
+  padding:10px 26px;border-radius:30px;font-size:14px;letter-spacing:1px;
+  background:rgba(20,10,40,.9);border:1px solid rgba(196,141,255,.4);
+  opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1}
+#toast.good{color:#d8ffcf;border-color:rgba(163,230,53,.5)}
+#toast.bad{color:#ffd2d2;border-color:rgba(244,63,94,.5)}
+#modeTag{position:absolute;right:3%;top:64.5%;z-index:9;font-size:10px;letter-spacing:2px;
+  color:#c4b5fd;opacity:.6}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="scene">
+    <div class="beam"></div><div id="stars"></div>
+    <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+    <canvas id="fx"></canvas>
+  </div>
+
+  <div id="speaker" title="静音开关">
+    <svg viewBox="0 0 48 48" fill="none">
+      <path d="M8 19v10h8l10 8V11l-10 8H8z" fill="#e9d5ff"/>
+      <path class="wave" d="M32 17c3 3.8 3 10.2 0 14" stroke="#e9d5ff" stroke-width="3" stroke-linecap="round"/>
+      <path class="wave" d="M38 12c5.5 6.2 5.5 17.8 0 24" stroke="#c084fc" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    <div class="dot"></div>
+  </div>
+
+  <div id="strip">
+    <div id="listenChip" title="再听一遍">
+      <div id="wave"><i></i><i></i><i></i><i></i><i></i></div>
+      <div id="listenTxt">听声音 · 抓住你听到的词</div>
+      <div id="muteHint">(静音)</div>
+    </div>
+    <div id="slots"></div>
+    <div id="roundBox"><div id="round">Round 1</div><div id="streak">⭐ x0 连对</div></div>
+  </div>
+
+  <div id="cam">
+    <video id="video" playsinline muted autoplay></video>
+    <div id="camShade"></div><div id="scan"></div>
+    <canvas id="hud"></canvas>
+    <div id="camLive"><i></i>LIVE · 手部追踪中</div>
+    <div id="camLabel">镜头 · 对准你</div>
+  </div>
+  <div id="modeTag">HAND TRACKING</div>
+  <div id="toast"></div>
+
+  <div id="overlay">
+    <h1>听音抓词 · <b>Word Catcher</b></h1>
+    <p>喇叭念出一个英文词<br>紫色星云里会飞出好几个词<br><b style="color:#f0abfc">张开手 → 合拢，捏住你听到的那个</b></p>
+    <div class="steps">
+      🎤 允许摄像头权限（手部追踪在你自己的电脑上完成，不上传）<br>
+      🖐 举起手，让镜头看到<br>
+      🤏 拇指食指张合 = 抓取 · 没有摄像头也能用鼠标点着玩
+    </div>
+    <button id="startBtn">开 始</button>
+  </div>
+</div>
+
+<script type="module">
+const $=s=>document.querySelector(s);
+const qs=new URLSearchParams(location.search);
+const CFG={mouse:qs.get('mode')==='mouse',auto:qs.get('autostart')==='1'};
+
+/* ---------- word sets (minimal pairs) ---------- */
+const SETS=[
+  ['how','who','now'],['are','or','her'],['you','your','u'],
+  ['when','went','then'],['think','sink','thank'],['live','leave','give'],
+  ['ship','sheep','sip'],['work','walk','word'],['eat','it','ate'],['cat','cut','cart']
+];
+const OTHERS=['how','who','are','or','when','then','u','it','now','her','went','sink'];
+
+/* ---------- state ---------- */
+let scene={w:0,h:0},cam={w:0,h:0};
+let words=[],fx=[],cursor=null,pinchPrev=new Map();
+let round=0,streak=0,caught=0,curSet=null,target=null,muted=false;
+let handLandmarker=null,videoOK=false,lastVT=-1;
+const fxc=$('#fx'),fxx=fxc.getContext('2d');
+const hudc=$('#hud'),hxx=hudc.getContext('2d');
+function fit(cv,c2){const r=cv.getBoundingClientRect();cv.width=r.width*devicePixelRatio;cv.height=r.height*devicePixelRatio;
+  c2.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);return{w:r.width,h:r.height}}
+function resize(){scene=fit(fxc,fxx);cam=fit(hudc,hxx)}
+addEventListener('resize',resize);resize();
+
+/* ---------- audio ---------- */
+let AC=null;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}return AC}
+function blip(f,d,type='sine',g=.18){const a=ac();if(!a)return;
+  const o=a.createOscillator(),gn=a.createGain();o.type=type;o.frequency.value=f;
+  gn.gain.setValueAtTime(g,a.currentTime);gn.gain.exponentialRampToValueAtTime(.001,a.currentTime+d);
+  o.connect(gn).connect(a.destination);o.start();o.stop(a.currentTime+d)}
+const sGood=()=>{blip(660,.12);setTimeout(()=>blip(990,.18),90)};
+const sBad =()=>blip(140,.25,'sawtooth',.12);
+const sSay =()=>blip(520,.08,'triangle',.1);
+
+/* ---------- speech ---------- */
+let VOICE=null;
+function pickVoice(){const vs=speechSynthesis?speechSynthesis.getVoices():[];
+  VOICE=vs.find(v=>/en[-_]US/i.test(v.lang)&&/google/i.test(v.name))
+     ||vs.find(v=>/en[-_]US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function say(text){if(muted||!('speechSynthesis' in window))return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);
+  u.voice=VOICE;u.lang='en-US';u.rate=.82;u.pitch=1.05;
+  u.onstart=()=>$('#strip').classList.add('speaking');
+  u.onend=()=>$('#strip').classList.remove('speaking');
+  speechSynthesis.speak(u)}catch(e){}}
+function speakTarget(){ if(muted){ toast(`静音模式 · 目标词：${target}`,'');return }
+  say(`Catch the word. ${target}. ${target}`);sSay() }
+
+/* ---------- toast ---------- */
+let toastT=null;
+function toast(msg,cls){const t=$('#toast');t.textContent=msg;t.className='show '+cls;
+  clearTimeout(toastT);toastT=setTimeout(()=>t.className='',1400)}
+
+/* ---------- words ---------- */
+function mkWord(text,tx,ty){const depth=.45+Math.random()*.55;
+  return{text,x:tx??(0.12+Math.random()*.76)*scene.w,y:ty??(0.16+Math.random()*.42)*scene.h,
+    vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.18,depth,phase:Math.random()*6.28,
+    isTarget:text===target,state:'fly',shake:0,r:22+depth*28}}
+function spawnField(){words=[];
+  const set=curSet.slice();while(set.length<6)set.push(OTHERS[Math.random()*OTHERS.length|0]);
+  const pool=[...new Set([target,...set])];
+  while(pool.length<6)pool.push(OTHERS[Math.random()*OTHERS.length|0]);
+  pool.forEach(t=>words.push(mkWord(t)))}
+function startRound(){round++;curSet=SETS[(round-1)%SETS.length];
+  target=curSet[Math.random()<.6?0:1];
+  spawnField();
+  $('#round').textContent='Round '+round;
+  speakTarget()}
+
+/* ---------- slots ---------- */
+function renderSlots(){const el=$('#slots');el.innerHTML='';
+  for(let i=0;i<5;i++){const d=document.createElement('div');d.className='slot'+(i<caught?' filled':'');
+    d.textContent=i<caught?'✓':'?';el.appendChild(d)}}
+
+/* ---------- catch ---------- */
+function tryCatch(x,y){let best=null,bd=1e9;
+  for(const w of words){if(w.state!=='fly')continue;
+    const d=Math.hypot(w.x-x,w.y-y);if(d<w.r()+38&&d<bd){bd=d;best=w}}
+  if(!best)return;
+  if(best.text===target){
+    best.state='caught';sGood();streak++;caught++;
+    fx.push({t:'burst',x:best.x,y:best.y,a:0});
+    fx.push({t:'fly',x:best.x,y:best.y,a:0});
+    toast(`✓ 抓到了 ${best.text}！`,'good');
+    $('#streak').textContent=`⭐ x${streak} 连对`;renderSlots();
+    setTimeout(()=>{
+      if(caught>=5){caught=0;renderSlots();toast('🎉 本组完成！下一组','good')}
+      startRound()
+    },750);
+  }else{
+    best.state='dead';best.respawn=1.4;sBad();streak=0;
+    $('#streak').textContent=`⭐ x0 连对`;
+    fx.push({t:'shatter',x:best.x,y:best.y,a:0});
+    toast(`✗ 是 ${best.text}，再听听`,'bad');
+    setTimeout(speakTarget,700);
+  }}
+
+/* ---------- rendering ---------- */
+function draw(dt,now){
+  fxx.clearRect(0,0,scene.w,scene.h);
+  for(const w of words){
+    if(w.state==='dead'){w.respawn-=dt;if(w.respawn<=0){Object.assign(w,mkWord(w.text));w.state='fly'}else continue}
+    w.phase+=dt*1.2;
+    w.x+=(w.vx+Math.sin(w.phase)*.25)*dt*60*.6;
+    w.y+=(w.vy+Math.cos(w.phase*.8)*.12)*dt*60*.6;
+    // stay in band
+    if(w.x<.08*scene.w||w.x>.92*scene.w)w.vx*=-1;
+    if(w.y<.14*scene.h||w.y>.72*scene.h)w.vy*=-1;
+    if(w.shake>0)w.shake-=dt;
+    const wob=w.shake>0?Math.sin(now*40)*6:0;
+    const size=(22+w.depth*30);
+    fxx.save();
+    fxx.translate(w.x+wob,w.y);
+    fxx.font=`italic 700 ${size}px Georgia,'Times New Roman',serif`;
+    fxx.textAlign='center';fxx.textBaseline='middle';
+    const alpha=0.35+w.depth*.65;
+    fxx.shadowColor=w.isTarget?'rgba(232,121,249,.95)':'rgba(147,51,234,.7)';
+    fxx.shadowBlur=14+w.depth*22;
+    fxx.fillStyle=w.isTarget?`rgba(255,255,255,${alpha})`:`rgba(216,180,254,${alpha*.92})`;
+    if(w.state!=='caught')fxx.fillText(w.text,0,0);
+    fxx.restore();
+  }
+  /* fx */
+  for(let i=fx.length-1;i>=0;i--){const e=fx[i];e.a+=dt;
+    if(e.t==='burst'){const p=e.a/.5;if(p>=1){fx.splice(i,1);continue}
+      fxx.strokeStyle=`rgba(240,171,252,${1-p})`;fxx.lineWidth=3;
+      fxx.beginPath();fxx.arc(e.x,e.y,20+p*90,0,6.28);fxx.stroke();
+      for(let k=0;k<8;k++){const a=k/8*6.28;fxx.fillStyle=`rgba(240,171,252,${1-p})`;
+        fxx.beginPath();fxx.arc(e.x+Math.cos(a)*(30+p*110),e.y+Math.sin(a)*(30+p*110),3.5*(1-p)+1,0,6.28);fxx.fill()}}
+    if(e.t==='shatter'){const p=e.a/.4;if(p>=1){fx.splice(i,1);continue}
+      for(let k=0;k<7;k++){const a=k/7*6.28;fxx.fillStyle=`rgba(244,63,94,${1-p})`;
+        fxx.fillRect(e.x+Math.cos(a)*p*60-2,e.y+Math.sin(a)*p*60-2,4,4)}}
+    if(e.t==='fly'){const p=Math.min(1,e.a/.55);
+      const ty=scene.h*.02, tx=scene.w*.5;
+      const x=e.x+(tx-e.x)*p, y=e.y+(ty-e.y)*p;
+      fxx.save();fxx.globalAlpha=1-p*.3;
+      fxx.shadowColor='rgba(232,121,249,.9)';fxx.shadowBlur=20;
+      fxx.fillStyle='#f0abfc';fxx.beginPath();fxx.arc(x,y,16*(1-p*.5),0,6.28);fxx.fill();fxx.restore();
+      if(p>=1)fx.splice(i,1)}
+  }
+  /* cursor */
+  hxx.clearRect(0,0,cam.w,cam.h);
+  if(cursor){
+    const {x,y,pinch}=cursor;
+    // draw in scene if y within scene
+    if(y<=scene.h){
+      fxx.save();
+      fxx.strokeStyle=pinch?'rgba(240,171,252,.95)':'rgba(196,141,255,.65)';
+      fxx.lineWidth=pinch?3:2;fxx.shadowColor='rgba(196,141,255,.8)';fxx.shadowBlur=12;
+      fxx.beginPath();fxx.arc(x,y,pinch?14:22,0,6.28);fxx.stroke();
+      fxx.fillStyle='rgba(240,171,252,.9)';
+      fxx.beginPath();fxx.arc(x,y,pinch?6:4,0,6.28);fxx.fill();
+      fxx.restore();
+    }
+    if(y>cam.y0){ /* hand dot inside cam zone */
+      const cy=y-cam.y0;
+      hxx.save();hxx.strokeStyle='rgba(240,171,252,.8)';hxx.lineWidth=2;
+      hxx.beginPath();hxx.arc(x,cy,pinch?12:20,0,6.28);hxx.stroke();hxx.restore();
+    }
+  }
+}
+
+/* ---------- input: mouse fallback ---------- */
+addEventListener('mousemove',e=>{const r=$('#app').getBoundingClientRect();
+  if(!CFG.mouse)return;
+  cursor={x:e.clientX-r.left,y:e.clientY-r.top,pinch:cursor?.pinch||false,mouse:true}});
+addEventListener('mousedown',e=>{if(CFG.mouse&&cursor){tryCatch(cursor.x,cursor.y)}});
+addEventListener('touchstart',e=>{if(!CFG.mouse)return;const r=$('#app').getBoundingClientRect();
+  const t=e.touches[0];cursor={x:t.clientX-r.left,y:t.clientY-r.top,pinch:true};
+  tryCatch(cursor.x,cursor.y)},{passive:true});
+
+/* ---------- camera + hand tracking ---------- */
+async function initCamera(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280}},audio:false});
+    const v=$('#video');v.srcObject=stream;await v.play();videoOK=true;
+  }catch(e){ toast('摄像头不可用 · 已切换鼠标模式','bad'); CFG.mouse=true;
+    $('#modeTag').textContent='MOUSE MODE'; $('#camLive').style.display='none'; }
+}
+function videoMap(nx,ny){ // normalized video coords -> app coords (cover + mirror)
+  const v=$('#video');const vw=v.videoWidth||1280,vh=v.videoHeight||720;
+  const s=Math.max(cam.w/vw,cam.h/vh);const dw=vw*s,dh=vh*s;
+  const ox=(cam.w-dw)/2, oy=(cam.h-dh)/2;
+  let x=ox+nx*dw, y=oy+ny*dh; x=cam.w-x; // mirror
+  return {x, y: cam.y0+y};
+}
+let hands=new Map();
+function detectHands(){
+  if(!handLandmarker||!videoOK)return;
+  const v=$('#video');
+  if(v.readyState<2)return;
+  const now=performance.now();
+  if(v.currentTime===lastVT)return; lastVT=v.currentTime;
+  let res;try{res=handLandmarker.detectForVideo(v,now)}catch(e){return}
+  const seen=new Set();
+  (res.landmarks||[]).forEach((lm,i)=>{
+    const key=res.handedness?.[i]?.[0]?.categoryName||('h'+i);seen.add(key);
+    const thumb=lm[4],idx=lm[8];
+    const d=Math.hypot(thumb.x-idx.x,thumb.y-idx.y);
+    const pinch=d<0.055;
+    const p1=videoMap((thumb.x+idx.x)/2,(thumb.y+idx.y)/2);
+    // map cam position -> scene cursor
+    const hn=Math.min(1,Math.max(0,(p1.y-cam.y0)/cam.h));
+    const sy=scene.h*(0.10+0.70*hn), sx=p1.x;
+    const h=hands.get(key)||{};
+    if(pinch&&!h.pinch){tryCatch(sx,sy)}
+    hands.set(key,{pinch,cx:sx,cy:sy,d});
+  });
+  for(const k of [...hands.keys()])if(!seen.has(k))hands.delete(k);
+  const arr=[...hands.values()];
+  if(arr.length){cursor={x:arr[0].cx,y:arr[0].cy,pinch:arr[0].pinch}}
+}
+async function initHands(){
+  if(CFG.mouse){$('#modeTag').textContent='MOUSE MODE';return}
+  try{
+    const vision=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
+    const fileset=await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+    handLandmarker=await vision.HandLandmarker.createFromOptions(fileset,{
+      baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'GPU'},
+      numHands:2,runningMode:'VIDEO'});
+    $('#modeTag').textContent='HAND TRACKING';
+  }catch(e){console.warn('hand tracking unavailable:',e);
+    $('#modeTag').textContent='MOUSE MODE (追踪加载失败)';CFG.mouse=true}
+}
+
+/* ---------- UI ---------- */
+$('#speaker').addEventListener('click',()=>{muted=!muted;
+  $('#speaker').classList.toggle('muted',muted);
+  $('#muteHint').style.display=muted?'block':'none';
+  if(muted&&'speechSynthesis' in window)speechSynthesis.cancel();
+  toast(muted?'🔇 已静音 · 目标词会显示在提示里':'🔊 声音开启','')});
+$('#listenChip').addEventListener('click',()=>speakTarget());
+
+$('#startBtn').addEventListener('click',async()=>{
+  $('#startBtn').textContent='启动中…';
+  await initCamera();await initHands();
+  $('#overlay').classList.add('hidden');
+  renderSlots();startRound();
+});
+
+/* ---------- main loop ---------- */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  const appR=$('#app').getBoundingClientRect();
+  cam.y0=appR.height*.63;
+  detectHands();
+  draw(dt,now/1000);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* autostart (debug/testing) */
+if(CFG.auto){$('#overlay').classList.add('hidden');renderSlots();startRound()}
+if(CFG.mouse&&!CFG.auto){$('#modeTag').textContent='MOUSE MODE'}
+</script>
+</body>
+</html>
