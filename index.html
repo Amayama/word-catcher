@@ -3,18 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="version" content="v0.6-gatedwell">
+<meta name="version" content="v0.7-desktop">
 <title>Word Catcher · 听句抓词 v0.2</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;background:#0C0E13;overflow:hidden;
   font-family:'Roboto','PingFang SC','WenQuanYi Zen Hei','Microsoft YaHei',sans-serif;color:#F4EFE6}
-body{display:flex;justify-content:center;align-items:center}
-#app{position:relative;width:min(100vw,calc(100vh*9/16));height:min(100vh,calc(100vw*16/9));
-  background:#12141A;overflow:hidden}
+#app{position:relative;width:100vw;height:100vh;background:#12141A;overflow:hidden}
 
 /* ===== night forest scene ===== */
-#scene{position:absolute;left:0;top:0;width:100%;height:56%;overflow:hidden;
+#scene{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;
   background:linear-gradient(180deg,#1A2238 0%,#222B46 46%,#2E3B52 78%,#12141A 100%)}
 .moon{position:absolute;right:7%;top:7%;width:clamp(90px,17%,180px);aspect-ratio:1;border-radius:50%;
   background:radial-gradient(circle at 40% 38%,#FBF7EE,#E9E2D2 62%,rgba(233,226,210,0) 74%);
@@ -33,7 +31,7 @@ body{display:flex;justify-content:center;align-items:center}
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix type='saturate' values='0'/></filter><rect width='240' height='240' filter='url(%23n)' opacity='0.5'/></svg>");
   background-size:240px 240px}
 #fx{position:absolute;inset:0;width:100%;height:100%;z-index:3}
-#diag{position:absolute;right:2.5%;bottom:3%;z-index:4;font-size:10px;letter-spacing:1px;color:#8b96a8;opacity:.6}
+#diag{position:absolute;left:20px;bottom:16px;z-index:4;font-size:10px;letter-spacing:1px;color:#8b96a8;opacity:.65}
 .petal{position:absolute;border-radius:60% 40% 60% 40%;background:#D3A1AC;opacity:.4;z-index:2;pointer-events:none;
   animation:fall linear infinite}
 @keyframes fall{from{transform:translate(0,-8%) rotate(0)}to{transform:translate(var(--dx),118%) rotate(300deg)}}
@@ -51,32 +49,13 @@ body{display:flex;justify-content:center;align-items:center}
   filter:blur(6px);opacity:0;transition:opacity .25s;pointer-events:none}
 #sprayGlow.on{opacity:1}
 
-#strip{position:absolute;left:0;top:56%;width:100%;height:7%;z-index:6;
-  background:linear-gradient(180deg,#161A26,#10131C);
-  border-top:1.5px solid rgba(244,239,230,.18);
-  display:flex;align-items:center;gap:10px;padding:0 3.5%}
-#listenChip{display:flex;align-items:center;gap:8px;background:rgba(211,161,172,.12);
-  border:1.5px solid rgba(211,161,172,.35);border-radius:40px;padding:5px 12px;cursor:pointer;flex:none}
-#wave{display:flex;align-items:center;gap:4px;height:24px}
-#wave i{display:block;width:4px;border-radius:2px;background:linear-gradient(180deg,#D3A1AC,#B4838F);height:8px}
-#strip.speaking #wave i{animation:wv .5s ease-in-out infinite alternate}
-#wave i:nth-child(2){animation-delay:.1s}#wave i:nth-child(3){animation-delay:.2s}
-#wave i:nth-child(4){animation-delay:.3s}#wave i:nth-child(5){animation-delay:.15s}
-@keyframes wv{from{height:6px}to{height:22px}}
-#listenTxt{font-size:13px;letter-spacing:1px;opacity:.9;white-space:nowrap}
-#slots{display:flex;gap:6px;margin:0 auto;flex:none}
-.slot{min-width:46px;height:27px;border-radius:14px;border:1.5px dashed rgba(244,239,230,.3);
-  display:flex;align-items:center;justify-content:center;font-size:13px;color:rgba(244,239,230,.45);
-  padding:0 6px;font-family:'Quicksand','Roboto',sans-serif;font-weight:700}
-.slot.next{border-color:rgba(211,161,172,.9);box-shadow:0 0 10px rgba(211,161,172,.3)}
-.slot.filled{border:1.5px solid rgba(211,161,172,.9);color:#10131C;
-  background:linear-gradient(180deg,#D3A1AC,#B4838F);font-weight:800;
-  box-shadow:0 0 14px rgba(211,161,172,.4)}
-#roundBox{margin-left:auto;text-align:right;flex:none}
-#round{font-size:14px;color:#D3A1AC;font-weight:700;white-space:nowrap}
-#streak{font-size:11px;color:#F4EFE6;opacity:.7;margin-top:2px;white-space:nowrap}
-
-#cam{position:absolute;left:0;top:63%;width:100%;height:37%;overflow:hidden;background:#0C0E13}
+#strip{position:absolute;left:20px;top:20px;z-index:6;
+  background:rgba(16,19,28,.82);border:1.5px solid rgba(244,239,230,.16);
+  border-radius:22px;padding:10px 18px;backdrop-filter:blur(6px);
+  display:flex;align-items:center;gap:12px;max-width:calc(100vw - 140px);flex-wrap:wrap}
+#cam{position:absolute;right:20px;bottom:20px;width:min(24vw,340px);min-width:220px;aspect-ratio:4/3;
+  border-radius:18px;overflow:hidden;background:#0C0E13;
+  border:1.5px solid rgba(244,239,230,.2);box-shadow:0 12px 44px rgba(0,0,0,.55)}
 #video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);
   filter:brightness(.85) saturate(.85)}
 #camShade{position:absolute;inset:0;background:
@@ -84,8 +63,8 @@ body{display:flex;justify-content:center;align-items:center}
   linear-gradient(180deg,rgba(12,14,19,.2),rgba(10,12,17,.5));pointer-events:none}
 #scan{position:absolute;inset:0;opacity:.35;pointer-events:none;
   background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 2px,transparent 2px 5px)}
-#camLabel{position:absolute;left:3%;bottom:5%;font-size:11px;letter-spacing:3px;color:#F4EFE6;opacity:.4;z-index:5}
-#camLive{position:absolute;left:3%;top:6%;font-size:11px;letter-spacing:2px;color:#D3A1AC;opacity:.85;z-index:5;
+#camLabel{position:absolute;right:8px;bottom:6px;font-size:10px;letter-spacing:2px;color:#F4EFE6;opacity:.45;z-index:5}
+#camLive{position:absolute;left:8px;top:8px;font-size:11px;letter-spacing:2px;color:#D3A1AC;opacity:.85;z-index:5;
   display:flex;align-items:center;gap:7px}
 #camLive i{width:8px;height:8px;border-radius:50%;background:#D3A1AC;box-shadow:0 0 8px rgba(211,161,172,.9);animation:blink 1.6s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
@@ -110,7 +89,7 @@ body{display:flex;justify-content:center;align-items:center}
 #toast.show{opacity:1}
 #toast.good{color:#F4EFE6;border-color:rgba(211,161,172,.8)}
 #toast.bad{color:#f3c6ce;border-color:rgba(217,100,122,.6)}
-#modeTag{position:absolute;right:3%;top:64.5%;z-index:9;font-size:10px;letter-spacing:2px;color:#F4EFE6;opacity:.5}
+#modeTag{position:absolute;left:20px;bottom:34px;z-index:9;font-size:10px;letter-spacing:2px;color:#F4EFE6;opacity:.55}
 </style>
 </head>
 <body>
@@ -213,14 +192,14 @@ const hudc=$('#hud'),hxx=hudc.getContext('2d');
 function fit(cv,c2){const r=cv.getBoundingClientRect();
   cv.width=Math.max(1,r.width*devicePixelRatio);cv.height=Math.max(1,r.height*devicePixelRatio);
   c2.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);return{w:r.width,h:r.height}}
-function resize(){const prev={...scene};scene=fit(fxc,fxx);cam=fit(hudc,hxx);
+function resize(){const prev={...scene};cam.y0=0;scene=fit(fxc,fxx);cam=fit(hudc,hxx);
   if(prev.w>0&&scene.w>0&&words.length&&(prev.w!==scene.w||prev.h!==scene.h)){
     const kx=scene.w/prev.w,ky=scene.h/prev.h;
     words.forEach(w=>{w.x*=kx;w.y*=ky})}}
 addEventListener('resize',()=>setTimeout(resize,60));
 resize();setTimeout(resize,300);
 function setMode(n){modeName=n;$('#modeTag').textContent=n}
-function diag(){const d=$('#diag');d.textContent=`v0.6 · ${words.length} words · r${round} · ${modeName}`}
+function diag(){const d=$('#diag');d.textContent=`v0.7 · ${words.length} words · r${round} · ${modeName}`}
 
 /* audio */
 let AC=null;
@@ -254,10 +233,13 @@ function toast(msg,cls){const t=$('#toast');t.textContent=msg;t.className='show 
   clearTimeout(toastT);toastT=setTimeout(()=>t.className='',1600)}
 
 /* words */
-function sprayWord(text,isTarget,delay){
-  const ox=scene.w*.92,oy=scene.h*.1;
-  const tx=(0.12+Math.random()*.76)*scene.w;
-  const ty=(0.16+Math.random()*.62)*scene.h;
+function sprayWord(text,isTarget,delay,cell){
+  const ox=scene.w*.94,oy=scene.h*.06;
+  const cols=3,rows=2;
+  const cw=scene.w/cols,ch=scene.h/rows;
+  const gx=cell%cols,gy=Math.floor(cell/cols);
+  const tx=(gx+.5+(Math.random()-.5)*.44)*cw;
+  const ty=(gy+.5+(Math.random()-.5)*.44)*ch;
   const depth=.5+Math.random()*.5;
   words.push({text,x:ox,y:oy,vx:(tx-ox)/1.1,vy:(ty-oy)/1.1,
     depth,phase:Math.random()*6.28,isTarget,state:'spray',t:0,delay,
@@ -267,10 +249,11 @@ function startRound(){
   curSent=SENTENCES[(round-1)%SENTENCES.length];
   resize();
   const ws=curSent.t.split(' ');
-  const ds=curSent.d.slice().sort(()=>Math.random()-.5).slice(0,2+(ws.length<4?1:0));
+  const ds=curSent.d.slice().sort(()=>Math.random()-.5).slice(0,2);
   const all=[...ws.map(w=>({w,target:true})),...ds.map(w=>({w,target:false}))]
     .sort(()=>Math.random()-.5);
-  all.forEach((it,i)=>sprayWord(it.w,it.target,i*.16));
+  const cells=[...Array(6).keys()].sort(()=>Math.random()-.5);
+  all.forEach((it,i)=>sprayWord(it.w,it.target,i*.16,cells[i%6]));
   $('#round').textContent='Round '+round;
   renderSlots();
   $('#sprayGlow').classList.add('on');setTimeout(()=>$('#sprayGlow').classList.remove('on'),900);
@@ -315,7 +298,7 @@ function separate(){
   for(let i=0;i<words.length;i++){const a=words[i];if(a.state!=='fly')continue;
     for(let j=i+1;j<words.length;j++){const b=words[j];if(b.state!=='fly')continue;
       let dx=b.x-a.x,dy=b.y-a.y;let d=Math.hypot(dx,dy)||.01;
-      const min=a.r+b.r+26;
+      const min=a.r+b.r+90;
       if(d<min){const push=(min-d)/2;dx/=d;dy/=d;
         a.x-=dx*push;a.y-=dy*push;b.x+=dx*push;b.y+=dy*push;
         a.x=Math.max(.06*scene.w,Math.min(.94*scene.w,a.x));
@@ -329,8 +312,8 @@ function draw(dt,now){
   for(const w of words){
     if(w.delay>0){w.delay-=dt;continue}
     if(w.state==='dead'){w.respawn-=dt;
-      if(w.respawn<=0){Object.assign(w,{x:(0.12+Math.random()*.76)*scene.w,
-        y:(0.18+Math.random()*.58)*scene.h,vx:0,vy:0,state:'fly'})}else continue}
+      if(w.respawn<=0){Object.assign(w,{x:(0.14+Math.random()*.72)*scene.w,
+        y:(0.18+Math.random()*.6)*scene.h,vx:0,vy:0,state:'fly'})}else continue}
     if(w.state==='spray'){w.t+=dt;w.x+=w.vx*dt;w.y+=w.vy*dt;
       fxx.strokeStyle=`rgba(211,161,172,${Math.max(0,.35-w.t*.4)})`;fxx.lineWidth=2;
       fxx.beginPath();fxx.moveTo(w.x,w.y);fxx.lineTo(w.x-w.vx*.18,w.y-w.vy*.18);fxx.stroke();
@@ -345,7 +328,7 @@ function draw(dt,now){
         if(!near){w.phase+=dt*1.2;
         w.x+=(w.vx+Math.sin(w.phase)*.25)*dt*36;
         w.y+=(w.vy+Math.cos(w.phase*.8)*.12)*dt*36;
-        if(w.x<.07*scene.w||w.x>.93*scene.w)w.vx*=-1;
+        if(w.x<.06*scene.w||w.x>.94*scene.w)w.vx*=-1;
         if(w.y<.12*scene.h||w.y>.85*scene.h)w.vy*=-1}}}
     const size=(19+w.depth*25);
     fxx.save();fxx.translate(w.x,w.y);
@@ -380,7 +363,7 @@ function draw(dt,now){
     hxx.strokeStyle=c.armed?(c.dwell?COL.rose:'rgba(244,239,230,.8)'):'rgba(139,150,168,.5)';
     hxx.lineWidth=2.5;
     if(!c.armed)hxx.setLineDash([4,5]);
-    hxx.beginPath();hxx.arc(c.camX,c.camY-cam.y0,c.armed?(c.dwell?12:16):13,0,6.28);hxx.stroke();
+    hxx.beginPath();hxx.arc(c.camX,c.camY,c.armed?(c.dwell?12:16):13,0,6.28);hxx.stroke();
     hxx.restore()}}
   for(const c of mc){
     if(!c.armed){                                         // safe mode: small dashed ring
@@ -446,7 +429,7 @@ function videoMap(nx,ny){const v=$('#video');const vw=v.videoWidth||1280,vh=v.vi
   const s=Math.max(cam.w/vw,cam.h/vh);const dw=vw*s,dh=vh*s;
   const ox=(cam.w-dw)/2,oy=(cam.h-dh)/2;
   let x=ox+nx*dw,y=oy+ny*dh;x=cam.w-x;
-  return{x,y:cam.y0+y}}
+  return{x,y}}
 let hands=new Map();   // key -> cursor {x,y,camX,camY,openN,pinchN,pinching,extended,locked}
 function unlock(w){w.locked=null;if(w.chargingBy){const h=hands.get(w.chargingBy);if(h){h.dwell=null;h.charge=0}w.chargingBy=null}}
 /* per-hand: 1:1 direct mapping + open-palm-gated dwell charge
@@ -464,7 +447,7 @@ function updateHand(key,lm){
   if(h){dt=Math.min(.1,Math.max(0,(now-h.lastT)/1000))}
   const prev=h||{x:0,y:0,dwell:null,charge:0,lastT:now,armed:true};
   const p1=videoMap(cx0,cy0);                             // mirrored cam coords
-  const relX=p1.x/cam.w, relY=Math.min(1,Math.max(0,(p1.y-cam.y0)/cam.h));
+  const relX=p1.x/cam.w, relY=Math.min(1,Math.max(0,p1.y/cam.h));
   const tx=relX*scene.w, ty=relY*scene.h;                 // FULL-RANGE direct map
   const a=.6;
   const x=prev.x?prev.x+(tx-prev.x)*a:tx, y=prev.y?prev.y+(ty-prev.y)*a:ty;
@@ -532,6 +515,18 @@ window.__state=()=>({hands:[...hands.entries()].map(([k,h])=>({k,x:Math.round(h.
   scene:[Math.round(scene.w),Math.round(scene.h)],expect,cur:curSent&&curSent.t,streak,round,
   fly:words.filter(w=>w.state==='fly').map(w=>w.text+(w.locked?'🔒':''))});
 window.__popTest=()=>window.__simHand('sim','pinch');
+window.__aim=(fx,fy)=>{const v=$('#video');const vw=v.videoWidth||1280,vh=v.videoHeight||720;
+  const s=Math.max(cam.w/vw,cam.h/vh);const dw=vw*s,dh=vh*s;
+  const ox=(cam.w-dw)/2,oy=(cam.h-dh)/2;
+  let vx=((1-fx)*cam.w-ox)/dw, vy=(fy*cam.h-oy)/dh;
+  return {vx:Math.min(1,Math.max(0,vx)),vy:Math.min(1,Math.max(0,vy))}};
+window.__gap=()=>{const fly=words.filter(w=>w.state==='fly');let min=1e9;
+  for(let i=0;i<fly.length;i++)for(let j=i+1;j<fly.length;j++)
+    min=Math.min(min,Math.hypot(fly[i].x-fly[j].x,fly[i].y-fly[j].y)-(fly[i].r+fly[j].r));
+  return Math.round(min)};
+window.__sectors=()=>{const fly=words.filter(w=>w.state==='fly');
+  return {cols:[...new Set(fly.map(w=>Math.floor(w.x/(scene.w/3))))].sort(),
+          rows:[...new Set(fly.map(w=>Math.floor(w.y/(scene.h/2))))].sort(),n:fly.length}};
 window.__place=(text,fx,fy)=>{const w=words.find(w=>w.state==='fly'&&w.text===text);
   if(w){w.x=scene.w*fx;w.y=scene.h*fy}return !!w};
 
@@ -562,7 +557,6 @@ window.__sep=()=>{const fly=words.filter(w=>w.state==='fly');let min=1e9;
 let last=performance.now(),diagT=0;
 function loop(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
-  const appR=$('#app').getBoundingClientRect();cam.y0=appR.height*.63;
   if(scene.w<10)resize();
   detectHands();
   separate();
