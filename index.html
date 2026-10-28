@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="version" content="v0.2-nightforest">
+<meta name="version" content="v0.3-directmap">
 <title>Word Catcher · 听句抓词 v0.2</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -177,10 +177,10 @@ body{display:flex;justify-content:center;align-items:center}
 
   <div id="overlay">
     <div class="title">Listen. Catch. <b>Bloom.</b></div>
-    <p>夜色森林里，喇叭念一句简单的英语<br>词会从月光里飘出来（混着干扰词）<br><b style="color:#D3A1AC">按听到的顺序，张手 → 合拢，把它们抓回来</b></p>
+    <p>夜色森林里，喇叭念一句简单的英语<br>词会从月光里飘出来（混着干扰词）<br><b style="color:#D3A1AC">按听到的顺序：✊ 收拢手掌移到词上，🖐 张开让它炸开</b></p>
     <div class="steps">
       🎤 允许摄像头权限（手部追踪在本机完成，不上传）<br>
-      🖐 举手让镜头看到 · 🤏 拇指食指张合 = 抓取（靠近会自动吸附）<br>
+      ✊ 握拳/收拢 移动手掌对准词 → 🖐 张开手掌 = 抓住炸开（光圈随手张合变大变小）<br>
       🖱 没摄像头也能玩：鼠标移动 + 点击
     </div>
     <button id="startBtn">开 始</button>
@@ -220,7 +220,7 @@ function resize(){const prev={...scene};scene=fit(fxc,fxx);cam=fit(hudc,hxx);
 addEventListener('resize',()=>setTimeout(resize,60));
 resize();setTimeout(resize,300);
 function setMode(n){modeName=n;$('#modeTag').textContent=n}
-function diag(){const d=$('#diag');d.textContent=`v0.2 · ${words.length} words · r${round} · ${modeName}`}
+function diag(){const d=$('#diag');d.textContent=`v0.3 · ${words.length} words · r${round} · ${modeName}`}
 
 /* audio */
 let AC=null;
@@ -257,7 +257,7 @@ function toast(msg,cls){const t=$('#toast');t.textContent=msg;t.className='show 
 function sprayWord(text,isTarget,delay){
   const ox=scene.w*.92,oy=scene.h*.1;
   const tx=(0.12+Math.random()*.76)*scene.w;
-  const ty=(0.2+Math.random()*.4)*scene.h;
+  const ty=(0.16+Math.random()*.62)*scene.h;
   const depth=.5+Math.random()*.5;
   words.push({text,x:ox,y:oy,vx:(tx-ox)/1.1,vy:(ty-oy)/1.1,
     depth,phase:Math.random()*6.28,isTarget,state:'spray',t:0,delay,
@@ -319,7 +319,7 @@ function separate(){
         a.x-=dx*push;a.y-=dy*push;b.x+=dx*push;b.y+=dy*push;
         a.x=Math.max(.06*scene.w,Math.min(.94*scene.w,a.x));
         b.x=Math.max(.06*scene.w,Math.min(.94*scene.w,b.x));
-        a.y=Math.max(.14*scene.h,Math.min(.7*scene.h,a.y));
+        a.y=Math.max(.12*scene.h,Math.min(.85*scene.h,a.y));
         b.y=Math.max(.14*scene.h,Math.min(.7*scene.h,b.y))}}}}
 
 /* render */
@@ -329,7 +329,7 @@ function draw(dt,now){
     if(w.delay>0){w.delay-=dt;continue}
     if(w.state==='dead'){w.respawn-=dt;
       if(w.respawn<=0){Object.assign(w,{x:(0.12+Math.random()*.76)*scene.w,
-        y:(0.22+Math.random()*.4)*scene.h,vx:0,vy:0,state:'fly'})}else continue}
+        y:(0.18+Math.random()*.58)*scene.h,vx:0,vy:0,state:'fly'})}else continue}
     if(w.state==='spray'){w.t+=dt;w.x+=w.vx*dt;w.y+=w.vy*dt;
       fxx.strokeStyle=`rgba(211,161,172,${Math.max(0,.35-w.t*.4)})`;fxx.lineWidth=2;
       fxx.beginPath();fxx.moveTo(w.x,w.y);fxx.lineTo(w.x-w.vx*.18,w.y-w.vy*.18);fxx.stroke();
@@ -338,7 +338,7 @@ function draw(dt,now){
       w.x+=(w.vx+Math.sin(w.phase)*.25)*dt*36;
       w.y+=(w.vy+Math.cos(w.phase*.8)*.12)*dt*36;
       if(w.x<.07*scene.w||w.x>.93*scene.w)w.vx*=-1;
-      if(w.y<.16*scene.h||w.y>.68*scene.h)w.vy*=-1}
+      if(w.y<.12*scene.h||w.y>.85*scene.h)w.vy*=-1}
     const size=(19+w.depth*25);
     fxx.save();fxx.translate(w.x,w.y);
     fxx.font=`700 ${size}px Quicksand,Roboto,sans-serif`;
@@ -365,33 +365,36 @@ function draw(dt,now){
       if(p>=1)fx.splice(i,1)}}
   /* cursor + magnet hint */
   hxx.clearRect(0,0,cam.w,cam.h);
-  if(cursor&&cursor.tip2){
-    const{t1,t2,ratio}=cursor;
-    const cl=Math.max(0,1-ratio/.9);
-    hxx.strokeStyle=`rgba(244,239,230,${.15+cl*.75})`;hxx.lineWidth=2;
-    hxx.beginPath();hxx.moveTo(t1.x,t1.y-cam.y0);hxx.lineTo(t2.x,t2.y-cam.y0);hxx.stroke();
-    for(const p of[t1,t2]){hxx.fillStyle=`rgba(211,161,172,${.5+cl*.5})`;
-      hxx.beginPath();hxx.arc(p.x,p.y-cam.y0,4,0,6.28);hxx.fill()}}
-  if(cursor){const{x,y,pinch}=cursor;
+  if(cursor&&cursor.camX!==undefined&&cursor.camY>cam.y0){
+    hxx.save();
+    hxx.strokeStyle=cursor.state==='closed'?COL.rose:'rgba(244,239,230,.8)';
+    hxx.lineWidth=2.5;
+    hxx.beginPath();hxx.arc(cursor.camX,cursor.camY-cam.y0,16,0,6.28);hxx.stroke();
+    hxx.restore()}
+  if(cursor){const{x,y}=cursor;
+    const openN=cursor.openN??1;
+    const R=13+Math.min(1.6,Math.max(0,openN))*17;   // ring grows as hand opens
     const mw=(y<=scene.h*1.05)?magnetWord(x,y):null;
     if(mw){fxx.save();
-      fxx.strokeStyle='rgba(211,161,172,.4)';fxx.lineWidth=1.5;fxx.setLineDash([5,7]);
+      fxx.strokeStyle='rgba(211,161,172,.45)';fxx.lineWidth=1.5;fxx.setLineDash([5,7]);
       fxx.beginPath();fxx.moveTo(x,y);fxx.lineTo(mw.x,mw.y);fxx.stroke();
-      fxx.setLineDash([]);fxx.beginPath();fxx.arc(mw.x,mw.y,mw.r+14,0,6.28);fxx.stroke();
+      fxx.setLineDash([]);fxx.beginPath();fxx.arc(mw.x,mw.y,mw.r+12,0,6.28);fxx.stroke();
       fxx.restore()}
     if(y<=scene.h){fxx.save();
-      fxx.strokeStyle=pinch?COL.rose:'rgba(244,239,230,.6)';
-      fxx.lineWidth=pinch?3:2;fxx.shadowColor='rgba(211,161,172,.7)';fxx.shadowBlur=10;
-      fxx.beginPath();fxx.arc(x,y,pinch?13:20,0,6.28);fxx.stroke();
-      fxx.fillStyle=pinch?COL.rose:'rgba(244,239,230,.85)';
-      fxx.beginPath();fxx.arc(x,y,pinch?6:4,0,6.28);fxx.fill();fxx.restore()}
-    if(y>cam.y0){hxx.save();hxx.strokeStyle='rgba(211,161,172,.75)';hxx.lineWidth=2;
-      hxx.beginPath();hxx.arc(x,y-cam.y0,pinch?12:20,0,6.28);hxx.stroke();hxx.restore()}}}
-
+      fxx.strokeStyle=cursor.state==='closed'?COL.rose:'rgba(244,239,230,.75)';
+      fxx.lineWidth=cursor.state==='closed'?3.5:2.5;
+      fxx.shadowColor='rgba(211,161,172,.8)';fxx.shadowBlur=12;
+      fxx.beginPath();fxx.arc(x,y,R,0,6.28);fxx.stroke();
+      if(cursor.state==='closed'){fxx.fillStyle=COL.rose;
+        fxx.beginPath();fxx.arc(x,y,6,0,6.28);fxx.fill()}
+      else{fxx.fillStyle='rgba(244,239,230,.8)';
+        fxx.beginPath();fxx.arc(x,y,4,0,6.28);fxx.fill()}
+      fxx.restore()}}
+}
 /* mouse / touch */
 addEventListener('mousemove',e=>{const r=$('#app').getBoundingClientRect();
   cursor={x:e.clientX-r.left,y:e.clientY-r.top,pinch:cursor?.pinch||false,mouse:true}});
-addEventListener('mousedown',()=>{if(cursor&&(!handLandmarker||!videoOK||cursor.mouse))tryCatch(cursor.x,cursor.y)});
+addEventListener('mousedown',()=>{if(cursor&&(!cursor.hand))tryCatch(cursor.x,cursor.y)});
 addEventListener('touchstart',e=>{const r=$('#app').getBoundingClientRect();const t=e.touches[0];
   cursor={x:t.clientX-r.left,y:t.clientY-r.top,pinch:true};tryCatch(cursor.x,cursor.y)},{passive:true});
 
@@ -421,6 +424,23 @@ function videoMap(nx,ny){const v=$('#video');const vw=v.videoWidth||1280,vh=v.vi
   let x=ox+nx*dw,y=oy+ny*dh;x=cam.w-x;
   return{x,y:cam.y0+y}}
 let hands=new Map();
+let handActive=0;
+/* direct spatial mapping: palm center -> same relative position on the scene */
+function updateHand(key,lm){
+  const cx0=(lm[0].x+lm[5].x+lm[9].x+lm[13].x+lm[17].x)/5;
+  const cy0=(lm[0].y+lm[5].y+lm[9].y+lm[13].y+lm[17].y)/5;
+  const palm=Math.hypot(lm[0].x-lm[9].x,lm[0].y-lm[9].y)||.001;
+  let sp=0;for(const t of[8,12,16,20])sp+=Math.hypot(lm[t].x-cx0,lm[t].y-cy0);
+  const openN=(sp/4)/palm;                       // ~0.5 fist, ~1.6 open
+  const p1=videoMap(cx0,cy0);                    // mirrored cam coords
+  const relX=p1.x/cam.w, relY=Math.min(1,Math.max(0,(p1.y-cam.y0)/cam.h));
+  const tx=relX*scene.w, ty=relY*scene.h;        // FULL-RANGE direct map
+  const h=hands.get(key)||{state:openN>1.2?'open':'na',x:tx,y:ty};
+  let st=h.state;
+  if(st!=='closed'&&openN<0.85)st='closed';
+  else if(st!=='open'&&openN>1.2)st='open';
+  if(h.state==='closed'&&st==='open'){tryCatch(tx,ty)}   // open = pop
+  hands.set(key,{state:st,x:tx,y:ty,openN,p1})}
 function detectHands(){
   if(!handLandmarker||!videoOK)return;
   const v=$('#video');if(v.readyState<2)return;
@@ -429,23 +449,44 @@ function detectHands(){
   const seen=new Set();
   (res.landmarks||[]).forEach((lm,i)=>{
     const key=res.handedness?.[i]?.[0]?.categoryName||('h'+i);seen.add(key);
-    const palm=Math.hypot(lm[0].x-lm[9].x,lm[0].y-lm[9].y)||.001;
-    const d=Math.hypot(lm[4].x-lm[8].x,lm[4].y-lm[8].y);
-    const ratio=d/palm;                       // palm-normalized openness
-    const pinchNow=ratio<.42;
-    const h=hands.get(key)||{pinch:false,frames:0};
-    h.frames=pinchNow?(h.frames||0)+1:0;
-    const pinch=h.frames>=2;                   // 2-frame debounce
-    const p1=videoMap((lm[4].x+lm[8].x)/2,(lm[4].y+lm[8].y)/2);
-    const t1=videoMap(lm[4].x,lm[4].y),t2=videoMap(lm[8].x,lm[8].y);
-    const hn=Math.min(1,Math.max(0,(p1.y-cam.y0)/cam.h));
-    const cx=p1.x,cy=scene.h*(0.10+0.70*hn);
-    if(pinch&&!h.pinch)tryCatch(cx,cy);
-    hands.set(key,{pinch,cx,cy,ratio,t1,t2,frames:h.frames})});
+    updateHand(key,lm)});
   for(const k of [...hands.keys()])if(!seen.has(k))hands.delete(k);
+  handActive=hands.size;
+  syncCursor()}
+function syncCursor(){
   const arr=[...hands.values()];
-  if(arr.length)cursor={x:arr[0].cx,y:arr[0].cy,pinch:arr[0].pinch,mouse:false,
-    ratio:arr[0].ratio,t1:arr[0].t1,t2:arr[0].t2}}
+  if(!arr.length)return;
+  const t=arr[0];
+  const a=cursor&&cursor.hand?0.55:1;            // snappy EMA follow
+  cursor={x:(cursor?.x??t.x)+(t.x-(cursor?.x??t.x))*a,
+          y:(cursor?.y??t.y)+(t.y-(cursor?.y??t.y))*a,
+          openN:t.openN,state:t.state,hand:true,
+          camX:t.p1.x,camY:t.p1.y}}
+/* test helpers */
+window.__state=()=>({cursor:{x:cursor?Math.round(cursor.x):null,y:cursor?Math.round(cursor.y):null,
+  state:cursor?cursor.state:null,openN:cursor?+cursor.openN.toFixed(2):null},
+  scene:[Math.round(scene.w),Math.round(scene.h)],expect,cur:curSent&&curSent.t,streak,
+  fly:words.filter(w=>w.state==='fly').map(w=>w.text)});
+window.__popTest=()=>{
+  window.__simHand(true);                 // closed
+  const w=words.find(w=>w.state==='fly'&&w.text===curSent.t.split(' ')[expect]);
+  if(!w)return{err:'no expected word in fly',fly:words.filter(w=>w.state==='fly').map(w=>w.text)};
+  w.x=cursor.x;w.y=cursor.y;
+  const before={state:w.state};
+  window.__simHand(false);                // OPEN -> pop
+  return{word:w.text,before,after:w.state,expect,streak}};
+/* synthetic hand for automated testing */
+window.__simHand=(fist)=>{const lm=[];const mk=(x,y)=>({x,y});
+  lm[0]=mk(.5,.58);lm[9]=mk(.5,.46);lm[5]=mk(.45,.48);lm[13]=mk(.55,.48);lm[17]=mk(.58,.53);
+  const r=fist?.045:.17;
+  lm[8]=mk(.5+r,.5);lm[12]=mk(.5+r*.8,.5-r*.5);lm[16]=mk(.5-r*.2,.5-r);lm[20]=mk(.5-r,.5-r*.3);
+  lm[4]=mk(.5-r*.7,.5+r*.6);
+  lm[1]=mk(.46,.52);lm[2]=mk(.46,.5);lm[3]=mk(.46,.48);
+  lm[6]=mk(.44,.45);lm[7]=mk(.43,.42);lm[11]=mk(.5,.4);lm[10]=mk(.5,.43);
+  lm[15]=mk(.56,.42);lm[14]=mk(.55,.45);lm[19]=mk(.61,.48);lm[18]=mk(.6,.51);
+  updateHand('sim',lm);
+  syncCursor();
+  return {cursor:{x:cursor?Math.round(cursor.x):null,y:cursor?Math.round(cursor.y):null,state:cursor?cursor.state:null}}};
 
 /* UI */
 $('#speaker').addEventListener('click',()=>{muted=!muted;
