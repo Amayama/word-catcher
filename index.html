@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="version" content="v0.5-dwell">
+<meta name="version" content="v0.6-gatedwell">
 <title>Word Catcher · 听句抓词 v0.2</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -177,10 +177,10 @@ body{display:flex;justify-content:center;align-items:center}
 
   <div id="overlay">
     <div class="title">Listen. Catch. <b>Bloom.</b></div>
-    <p>夜色森林里，喇叭念一句简单的英语<br>词会从月光里飘出来（混着干扰词）<br><b style="color:#D3A1AC">按听到的顺序：手掌悬停在词上，蓄力环填满就炸——慢就是稳</b></p>
+    <p>夜色森林里，喇叭念一句简单的英语<br>词会从月光里飘出来（混着干扰词）<br><b style="color:#D3A1AC">握着拳怎么动都没事；对准词后张开手掌，蓄力环填满（0.5s）就炸</b></p>
     <div class="steps">
       🎤 允许摄像头权限（手部追踪在本机完成，不上传）<br>
-      🖐 手掌移到词上<b style="color:#D3A1AC">停住 0.7 秒</b>· 光圈蓄满自动炸开 · 移开即取消 · 双手可同时蓄力<br>
+      ✊ 握拳/收拢 = 安全移动（绝不会误触）· 🖐 <b style="color:#D3A1AC">张开手掌悬停 0.5 秒</b> = 抓取 · 双手独立<br>
       🖱 没摄像头也能玩：鼠标移动 + 点击
     </div>
     <button id="startBtn">开 始</button>
@@ -190,7 +190,7 @@ body{display:flex;justify-content:center;align-items:center}
 <script type="module">
 const $=s=>document.querySelector(s);
 const qs=new URLSearchParams(location.search);
-const CFG={mouse:qs.get('mode')==='mouse',auto:qs.get('autostart')==='1',dwell:+(qs.get('dwell')||700)};
+const CFG={mouse:qs.get('mode')==='mouse',auto:qs.get('autostart')==='1',dwell:+(qs.get('dwell')||500)};
 const COL={cream:'#F4EFE6',rose:'#D3A1AC',rose2:'#B4838F',bad:'#D9647A'};
 
 const SENTENCES=[
@@ -220,7 +220,7 @@ function resize(){const prev={...scene};scene=fit(fxc,fxx);cam=fit(hudc,hxx);
 addEventListener('resize',()=>setTimeout(resize,60));
 resize();setTimeout(resize,300);
 function setMode(n){modeName=n;$('#modeTag').textContent=n}
-function diag(){const d=$('#diag');d.textContent=`v0.5 · ${words.length} words · r${round} · ${modeName}`}
+function diag(){const d=$('#diag');d.textContent=`v0.6 · ${words.length} words · r${round} · ${modeName}`}
 
 /* audio */
 let AC=null;
@@ -371,31 +371,34 @@ function draw(dt,now){
       fxx.save();fxx.globalAlpha=1-p*.3;fxx.shadowColor='rgba(211,161,172,.9)';fxx.shadowBlur=18;
       fxx.fillStyle=COL.rose;fxx.beginPath();fxx.arc(x,y,15*(1-p*.5),0,6.28);fxx.fill();fxx.restore();
       if(p>=1)fx.splice(i,1)}}
-  /* cursors (both hands) + dwell progress + mouse fallback */
+  /* cursors: fist=safe(dashed dim) · open=armed · charging=rose progress */
   hxx.clearRect(0,0,cam.w,cam.h);
   const active=[...hands.values()];
-  const mc=(!active.length&&cursor&&!cursor.hand)?[{...cursor,mouse:true}]:active;
+  const mc=(!active.length&&cursor&&!cursor.hand)?[{...cursor,mouse:true,armed:true}]:active;
   for(const c of active){if(c.camY>cam.y0){
     hxx.save();
-    hxx.strokeStyle=c.dwell?COL.rose:'rgba(244,239,230,.75)';
+    hxx.strokeStyle=c.armed?(c.dwell?COL.rose:'rgba(244,239,230,.8)'):'rgba(139,150,168,.5)';
     hxx.lineWidth=2.5;
-    hxx.beginPath();hxx.arc(c.camX,c.camY-camY0Fix(c),c.dwell?12:16,0,6.28);hxx.stroke();
+    if(!c.armed)hxx.setLineDash([4,5]);
+    hxx.beginPath();hxx.arc(c.camX,c.camY-cam.y0,c.armed?(c.dwell?12:16):13,0,6.28);hxx.stroke();
     hxx.restore()}}
-  function camY0Fix(){return cam.y0}
   for(const c of mc){
+    if(!c.armed){                                         // safe mode: small dashed ring
+      if(c.y<=scene.h){fxx.save();
+        fxx.strokeStyle='rgba(139,150,168,.55)';fxx.lineWidth=2;fxx.setLineDash([4,6]);
+        fxx.beginPath();fxx.arc(c.x,c.y,12,0,6.28);fxx.stroke();
+        fxx.restore()}
+      continue}
     const R=c.dwell?14:19;
     if(c.dwell){
       const frac=Math.min(1,(c.charge||0)/CFG.dwell);
-      // tether
       fxx.save();
       fxx.strokeStyle='rgba(211,161,172,.55)';fxx.lineWidth=1.5;fxx.setLineDash([5,7]);
       fxx.beginPath();fxx.moveTo(c.x,c.y);fxx.lineTo(c.dwell.x,c.dwell.y);fxx.stroke();
       fxx.setLineDash([]);
-      // charge ring around word
       fxx.strokeStyle=COL.rose;fxx.lineWidth=5;fxx.lineCap='round';
       fxx.beginPath();fxx.arc(c.dwell.x,c.dwell.y,c.dwell.r+14,-Math.PI/2,-Math.PI/2+frac*6.283);fxx.stroke();
       fxx.restore();
-      // cursor arc fill
       fxx.save();
       fxx.strokeStyle=COL.rose;fxx.lineWidth=3.5;
       fxx.beginPath();fxx.arc(c.x,c.y,R,-Math.PI/2,-Math.PI/2+frac*6.283);fxx.stroke();
@@ -446,39 +449,51 @@ function videoMap(nx,ny){const v=$('#video');const vw=v.videoWidth||1280,vh=v.vi
   return{x,y:cam.y0+y}}
 let hands=new Map();   // key -> cursor {x,y,camX,camY,openN,pinchN,pinching,extended,locked}
 function unlock(w){w.locked=null;if(w.chargingBy){const h=hands.get(w.chargingBy);if(h){h.dwell=null;h.charge=0}w.chargingBy=null}}
-/* per-hand: 1:1 direct mapping + dwell-charge (hold still over a word) */
-const ENTER_R=45, EXIT_R=75;              // px beyond word radius: enter tight, exit loose (hysteresis)
+/* per-hand: 1:1 direct mapping + open-palm-gated dwell charge
+   fist/closed = safe travel (nothing can trigger) · open palm + hover = charge -> pop */
+const ARM_ON=1.1, ARM_OFF=0.85;             // openness hysteresis (fingertip spread / palm size)
 function updateHand(key,lm){
   const cx0=(lm[0].x+lm[5].x+lm[9].x+lm[13].x+lm[17].x)/5;
   const cy0=(lm[0].y+lm[5].y+lm[9].y+lm[13].y+lm[17].y)/5;
+  const palm=Math.hypot(lm[0].x-lm[9].x,lm[0].y-lm[9].y)||.001;
+  let sp=0;for(const t of[8,12,16,20])sp+=Math.hypot(lm[t].x-cx0,lm[t].y-cy0);
+  const openN=(sp/4)/palm;                                // fist ~0.5 · open ~1.5+
+  const h=hands.get(key);
+  const now=performance.now();
+  let dt=0;
+  if(h){dt=Math.min(.1,Math.max(0,(now-h.lastT)/1000))}
+  const prev=h||{x:0,y:0,dwell:null,charge:0,lastT:now,armed:true};
   const p1=videoMap(cx0,cy0);                             // mirrored cam coords
   const relX=p1.x/cam.w, relY=Math.min(1,Math.max(0,(p1.y-cam.y0)/cam.h));
   const tx=relX*scene.w, ty=relY*scene.h;                 // FULL-RANGE direct map
-  const h=hands.get(key)||{x:tx,y:ty,dwell:null,charge:0,lastT:0};
-  const a=.6;                                             // snappy follow
-  h.x=h.x+(tx-h.x)*a; h.y=h.y+(ty-h.y)*a;
-  h.camX=p1.x;h.camY=p1.y;
-  const now=performance.now();
-  let dt=Math.min(.1,Math.max(0,(now-h.lastT)/1000));h.lastT=now;
-  // validate current dwell target
-  if(h.dwell&&(h.dwell.state!=='fly'||h.dwell.chargingBy!==key)){h.dwell=null;h.charge=0}
-  if(h.dwell){
-    const d=Math.hypot(h.dwell.x-h.x,h.dwell.y-h.y);
-    if(d>h.dwell.r+EXIT_R){                               // moved away -> cancel
-      h.dwell.chargingBy=null;h.dwell=null;h.charge=0}
+  const a=.6;
+  const x=prev.x?prev.x+(tx-prev.x)*a:tx, y=prev.y?prev.y+(ty-prev.y)*a:ty;
+  let armed=prev.armed;
+  if(openN>ARM_ON)armed=true;
+  if(openN<ARM_OFF)armed=false;
+  const hand={x,y,camX:p1.x,camY:p1.y,openN,armed,dwell:prev.dwell,charge:prev.charge,lastT:now};
+  hands.set(key,hand);
+  if(!armed){                                             // closed = safe: cancel anything
+    if(hand.dwell){hand.dwell.chargingBy=null;hand.dwell=null}
+    hand.charge=0;
+    return}
+  // dwell logic (open palm only)
+  if(hand.dwell&&(hand.dwell.state!=='fly'||hand.dwell.chargingBy!==key)){hand.dwell=null;hand.charge=0}
+  if(hand.dwell){
+    const d=Math.hypot(hand.dwell.x-hand.x,hand.dwell.y-hand.y);
+    if(d>hand.dwell.r+75){                                // moved away -> cancel
+      hand.dwell.chargingBy=null;hand.dwell=null;hand.charge=0}
     else{
-      h.charge+=dt*1000;
-      h.dwell.x+=(h.x-h.dwell.x)*.12;h.dwell.y+=(h.y-h.dwell.y)*.12;  // slight pull, feels alive
-      if(h.charge>=CFG.dwell){
-        const w=h.dwell;h.dwell=null;h.charge=0;tryCatchWord(w)}}}
+      hand.charge+=dt*1000;
+      hand.dwell.x+=(hand.x-hand.dwell.x)*.12;hand.dwell.y+=(hand.y-hand.dwell.y)*.12;
+      if(hand.charge>=CFG.dwell){
+        const w=hand.dwell;hand.dwell=null;hand.charge=0;tryCatchWord(w)}}}
   else{
-    // acquire: tight radius, nearest only — no accidental grabs while passing
     let best=null,bd=1e9;
     for(const w of words){if(w.state!=='fly'||w.chargingBy)continue;
-      const d=Math.hypot(w.x-h.x,w.y-h.y);
-      if(d<w.r+ENTER_R&&d<bd){bd=d;best=w}}
-    if(best){best.chargingBy=key;h.dwell=best;h.charge=0}}
-  hands.set(key,h)}
+      const d=Math.hypot(w.x-hand.x,w.y-hand.y);
+      if(d<w.r+45&&d<bd){bd=d;best=w}}
+    if(best){best.chargingBy=key;hand.dwell=best;hand.charge=0}}}
 function dropHand(key){const h=hands.get(key);
   if(h&&h.dwell){h.dwell.chargingBy=null}
   if(h&&h.locked)unlock(h.locked);
@@ -498,8 +513,11 @@ function mouseCursor(){
   return cursor&&!cursor.hand&&hands.size===0?cursor:null}
 window.__simHand=(key,mode,cx=.5,cy=.5)=>{const lm=[];const mk=(x,y)=>({x,y});
   lm[0]=mk(cx,cy+.09);lm[9]=mk(cx,cy-.02);lm[5]=mk(cx-.05,cy);lm[13]=mk(cx+.05,cy);lm[17]=mk(cx+.08,cy+.05);
-  lm[4]=mk(cx-.12,cy+.05);lm[8]=mk(cx-.08,cy-.12);
-  lm[12]=mk(cx+.13,cy-.08);lm[16]=mk(cx-.03,cy-.16);lm[20]=mk(cx-.13,cy-.05);
+  const open=mode!=='fist';
+  const ex=open?.16:.045;
+  lm[4]=mk(cx-(open?.12:.03),cy+(open?.05:.02));
+  lm[8]=mk(cx-(open?.08:.03),cy-(open?.12:.01));
+  lm[12]=mk(cx+ex*.8,cy-ex*.5);lm[16]=mk(cx-ex*.2,cy-ex);lm[20]=mk(cx-ex,cy-ex*.3);
   lm[1]=mk(cx-.04,cy+.03);lm[2]=mk(cx-.04,cy);lm[3]=mk(cx-.04,cy-.02);
   lm[6]=mk(cx-.05,cy-.03);lm[7]=mk(cx-.05,cy-.09);
   lm[10]=mk(cx+.01,cy-.06);lm[11]=mk(cx+.01,cy-.12);
@@ -507,10 +525,10 @@ window.__simHand=(key,mode,cx=.5,cy=.5)=>{const lm=[];const mk=(x,y)=>({x,y});
   lm[18]=mk(cx+.1,cy-.02);lm[19]=mk(cx+.11,cy-.08);
   updateHand(key,lm);
   const h=hands.get(key);
-  return {key,dwell:h.dwell?h.dwell.text:null,charge:Math.round(h.charge),
-    x:Math.round(h.x),y:Math.round(h.y)}};
+  return {key,armed:h.armed,openN:+h.openN.toFixed(2),dwell:h.dwell?h.dwell.text:null,
+    charge:Math.round(h.charge),x:Math.round(h.x),y:Math.round(h.y)}};
 window.__state=()=>({hands:[...hands.entries()].map(([k,h])=>({k,x:Math.round(h.x),y:Math.round(h.y),
-    dwell:h.dwell?h.dwell.text:null,charge:Math.round(h.charge)})),
+    armed:h.armed,openN:+(h.openN||0).toFixed(2),dwell:h.dwell?h.dwell.text:null,charge:Math.round(h.charge)})),
   scene:[Math.round(scene.w),Math.round(scene.h)],expect,cur:curSent&&curSent.t,streak,round,
   fly:words.filter(w=>w.state==='fly').map(w=>w.text+(w.locked?'🔒':''))});
 window.__popTest=()=>window.__simHand('sim','pinch');
